@@ -39,40 +39,39 @@ const activators = {
     return 'Reset'
   },
   openLinkInBackgroundTab: (event, target) => {
-    mouseEvent(target, 'click', { ctrlKey: !isMac, metaKey: isMac })
-    if (SAKA_PLATFORM === 'firefox') {
-      backgroundOpenLink('openLinkInBackgroundTab', target)
-    }
+    openVia('openLinkInBackgroundTab', target, {
+      ctrlKey: !isMac,
+      metaKey: isMac
+    })
     target.focus()
     return 'Reset'
   },
   openLinkInForegroundTab: (event, target) => {
-    mouseEvent(target, 'click', {
+    openVia('openLinkInForegroundTab', target, {
       ctrlKey: !isMac,
       metaKey: isMac,
       shiftKey: true
     })
-    if (SAKA_PLATFORM === 'firefox') {
-      backgroundOpenLink('openLinkInForegroundTab', target)
-    }
     target.focus()
     return 'Reset'
   },
   openLinkInNewWindow: (event, target) => {
-    mouseEvent(target, 'click', { shiftKey: true })
-    if (SAKA_PLATFORM === 'firefox') {
-      backgroundOpenLink('openLinkInNewWindow', target)
-    }
+    openVia('openLinkInNewWindow', target, { shiftKey: true })
     target.focus()
     return 'Reset'
   },
   openLinkInIncognitoWindow: (event, target) => {
-    mouseEvent(target, 'click', {
-      shiftKey: true,
-      ctrlKey: !isMac,
-      metaKey: isMac
-    })
-    backgroundOpenLink('openLinkInIncognitoWindow', target)
+    // No platform can open incognito from a click, so a link always goes
+    // through the background page; the click is only for href-less targets.
+    if (target.href) {
+      backgroundOpenLink('openLinkInIncognitoWindow', target)
+    } else {
+      mouseEvent(target, 'click', {
+        shiftKey: true,
+        ctrlKey: !isMac,
+        metaKey: isMac
+      })
+    }
     target.focus()
     return 'Reset'
   },
@@ -85,6 +84,21 @@ const activators = {
   focusLink: (event, target) => {
     target.focus()
     return 'Reset'
+  }
+}
+
+/**
+ * Opens target in a new tab/window. Firefox now honors modifier keys on
+ * synthetic clicks, so doing both the modified click and the background-page
+ * open (the old workaround) opened every link twice. Links with an href use
+ * only the background page there (keeps the container); anything else, or
+ * Chrome, gets the modified click.
+ */
+function openVia (hintType, target, clickModifiers) {
+  if (SAKA_PLATFORM === 'firefox' && target.href) {
+    backgroundOpenLink(hintType, target)
+  } else {
+    mouseEvent(target, 'click', clickModifiers)
   }
 }
 
