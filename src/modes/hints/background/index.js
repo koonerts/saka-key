@@ -69,6 +69,9 @@ export default {
             .query({ currentWindow: true, active: true })
             .then(t => {
               arg.cookieStoreId = t[0].cookieStoreId
+              // record the hinted tab as the opener (like ctrl/middle-click): tree-tab extensions nest it,
+              // and extensions that follow openerTabId (e.g. per-tab volume) treat it as a child
+              arg.openerTabId = t[0].id
             })
             .finally(() => {
               browser.tabs.create(arg)
@@ -83,6 +86,7 @@ export default {
             .query({ currentWindow: true, active: true })
             .then(t => {
               arg.cookieStoreId = t[0].cookieStoreId
+              arg.openerTabId = t[0].id
             })
             .finally(() => {
               browser.tabs.create(arg)
